@@ -262,13 +262,78 @@ AOP ---> SpringAop & AspectJ
                 excution(* com.hoxton.dao.*.*(..))
                 ```
          
-              
+         
+         within([package名].* )或( [package名]..*)
+         
+         ​	舉例
+         
+         	1. 
+         	1. 
+         
+         
    
    
 
+# AOP操作(Aspect J  註解)
+
+1. 創建類，在類裡面定義方法
+
+```java
+public class User {
+
+    public void add(){
+        System.out.println("add");
+    }
+}
+```
+
+2. 創建增強類(編寫增強邏輯)
+
+   1. 在增強類的裡面，創建方法，讓不同方法代表不同通知類型
+
+      ```java
+      public class UserProxy {
+          public void before(){
+              System.out.println("before");
+          }
+      }
+      ```
+
+3. 進行通知的配置
+
+   1. 在Spring
 
 
 
+
+
+# Log4j 2
+
+```mermaid
+flowchart TD;
+1["OFF(不輸出任何日志)"]--->2["FETAL(造成應用程式停止的日志)"]--->3["ERROR(造成應用錯誤停止的日志)"]--->4["WARN(可能導致錯誤的日志)"]--->5["INFO(一般資訊的日志)"]--->6["DEBUG(除錯資訊的日志)"]--->7["Trace(更細的除錯資訊，通常用來追蹤城市流程的日誌)"]--->8["ALL(全輸出不留情)"]
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+## JUL 入門
+
+```mermaid
+flowchart LR;
+Application-->Logger--->Handler--->id1[Outside World]
+Logger -.->Filter
+Handler -.->id2[Filter] & id3[Filter]
+```
 
 
 
