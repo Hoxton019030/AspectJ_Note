@@ -195,4 +195,63 @@
 
    1. 把通知應用到切入點的過程，就叫切面
 
-      
+
+
+
+
+# AOP操作(準備)
+
+1. Spring 框架一般都是基於AspectJ實現的AOP操作
+
+   1. 什麼是AspectJ
+
+      + AspectJ不是Spring的組成部分，是一個獨立的AOP框架， 一般把AspectJ和Spring框架一起使用，進行AOP操作
+
+   2. 基於Aspect實現AOP操作
+
+      1. xml配置文件實現
+      2. 基於註解方法實現(主要使用)
+
+   3. 再專案裡面引入AOP依賴
+
+   4. 切入點表達式
+
+      1. 切入點表達式的作用: 知道對哪個類的哪個方法進行增強
+
+      2. 語法結構:
+
+         execution( [權限修飾符] [返回類型] [類全路徑] [方法名稱] ( [參數列表] ) )
+         
+         + 權限修飾符: public, private, *(代表不論是public, private 都選)
+         
+         + 返回類型: String, int
+         
+         + 類全路徑: com.hoxton.......
+         
+         + 方法名稱: 就方法名稱
+         
+         + 參數列表: 有哪些參數
+         
+           舉例
+         
+           1. 對com.hoxton.dao.BookDao類裡面的add方法進行增強
+         
+              + ```java
+                execution(* com.hoxton.dao.BookDao.add(..) )
+                ```
+         
+           2. 對com.hoxton.dao.BookDao類的所有方法進行增強
+         
+              + ```java
+                execution(* com.hoxton.dao.BookDao.*(..))
+                ```
+         
+           3. 對com.hoxton.dao包裡的所有類，類裡面的髓有方法進行增強
+         
+              + ```java
+                excution(* com.hoxton.dao.*.*(..))
+                ```
+         
+              
+   
+   
