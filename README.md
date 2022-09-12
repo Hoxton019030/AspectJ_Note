@@ -147,13 +147,202 @@ public class FilterConfig {
 >         bean.setOrder(2); //設定過濾器的執行順序
 >         return bean;
 >     }
-> //////
+> 
 > }
 > ```
 >
 > 
 
 
+
+SpringBoot本身也提供了許多不同的Filter供使用，參考如下
+
+![image-20220912153023872](https://i.imgur.com/nKZ6Hy1.png)
+
+
+
+其中以**OncePerRequestFilter**最常被使用，這個Filter會去**過濾每一個Request請求，且不會重複執行**，且這個Filter有一個doFilterInternal()的方法，供我們撰寫Filter邏輯(因doFilter()的方法已在OncePerRequestFilter裡面實現了)，可以用來做Jwtoken的登入驗證，程式如下：
+
+```java
+@Component
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    @Autowired
+    private JwtService jwtService;
+
+    @Autowired
+    private UserDetailsService userDetailsService;
+
+    //注入JwtService UserDetailsService，分別用來解析Token與查詢使用者詳情
+
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws          ServletException, IOException {
+        String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+        if (authHeader != null) {
+            String accessToken = authHeader.replace("Bearer ", "");
+            //從請求標頭中取得Authorization欄位中的值
+            Map<String, Object> claims = jwtService.parseToken(accessToken);
+            //擷取出後面的JWT字串，接著解析它
+            String username = (String) claims.get("username");
+            //從claims物件中取得username欄位的值
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            //並透過userDetailService查詢使用者詳情。這也代表JWT的內容(payload)必須包含username這個欄位
+            //在filter中查詢使用者的目的，是為了將該次請求所代表的驗證後資料(Authentication)帶進security中的Context。
+            //Context是一種較抽象的概念，可以想像成該次請求的身分狀態
+
+            Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+            //為了將這個請求的使用者身分告訴伺服器，我們建立UsernamePasswordAuthenticationToken的物件，其中第三個參數放GrantedAuthority的List，              作為API的授權檢查
+            //第一個參數(principal)傳入使用者詳請(UserDetails)。
+            // 而第二個參數是credential，通常是密碼，但不傳入也無訪
+            //經由傳入principal，我們得以在業務邏輯中從Context輕易獲取使用者身分的資料
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+        }
+        filterChain.doFilter(request, response);
+
+
+    }
+}
+```
+
+
+
+配置完後再將這個Filter加入Security的過濾鍊
+
+
+
+```java
+@EnableWebSecurity
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+    @Autowired
+    private   UserDetailsService userDetailsService;
+
+    @Autowired
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    /**
+     * 協助帳號密碼認證的東西
+     * @return
+     */
+    @Override
+    @Bean
+    public AuthenticationManager authenticationManagerBean() throws Exception {
+            return super.authenticationManagerBean();
+
+    }
+    //加入Security的過濾鍊
+    protected void configure(HttpSecurity http) throws Exception {
+        http.authorizeHttpRequests()
+                .antMatchers(HttpMethod.GET, "/users/**").hasAuthority(MemberAuthority.SYSTEM_ADMIN.name())
+//                .antMatchers(HttpMethod.GET,"/h2/**").hasAuthority(MemberAuthority.SYSTEM_ADMIN.name())
+                .antMatchers(HttpMethod.GET,"/login/**").permitAll()
+//                .antMatchers(HttpMethod.POST,"login").permitAll()
+//                .antMatchers(HttpMethod.POST, "/users").permitAll()
+                .anyRequest().permitAll()
+                .and()
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class) //於UsernamePasswordAuthenticationFilter進行認證
+                .sessionManagement()
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .and()
+                .csrf().disable()
+                .formLogin();
+        http.headers().frameOptions().disable();
+        //讓spring Security可以和h2建立連線
+    }
+
+    /**
+     *
+     * @param auth 配置全局驗證資訊，如Authentication Provider,UserDetailService等等資訊，
+     *             authenticationManager會接收到UsernamePasswordAuthenticationToken傳入的資料後
+     *             調用SecurityConfig中所配置的userDetailsService,passwordEncoder來協助驗證
+     *
+     * @throws Exception
+     */
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.userDetailsService(userDetailsService).passwordEncoder(new BCryptPasswordEncoder());
+    }
+}
+```
+
+
+
+一些Code的示範
+
+```java
+public class LogProcessTimeFilter extends OncePerRequestFilter {
+    /**
+     * @param request     請求
+     * @param response    回應
+     * @param filterChain 過濾鏈 會將現有的filter給串聯起來，當請求進入後端，需要依序經過它們才會達到Controller，相對的，當回應離開Controller，則是按照相反的方向經過那些Filter
+     * @throws ServletException
+     * @throws IOException
+     */
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        long startTime = System.currentTimeMillis();
+        filterChain.doFilter(request, response); //doFilter:相當於將請求送至Controller。
+        long endTime = System.currentTimeMillis();
+        long processTime = endTime - startTime;
+        System.out.println("processTime = " + processTime);
+    }
+}
+```
+
+```java
+/**
+ * Controller收到的請求主體(RequestBody)和回應主體(ResponseBody)
+ * 分別由HttpServletRequest與HttpServletResponse的InputStream、OutputStream轉化而來，
+ * 但資料流只能讀取一次，如果在Filter層就被讀掉，可能會導致後面都收不到資料
+ * 為了保留主體中的資料，我們將請求主體與回應主體包裝成ContentCachingResponseWrapper ContentCachingRequestWrapper
+ * 再如同往常傳入FilterChain
+ *
+ * 這兩個Wrapper的特色是會在內部備份一個ByteArrayOutputStream，我們只要呼叫這兩個Wrapper的
+ * getContentAsByteArray就可以無限制地取得主體內容
+ */
+public class PrintResponseRequest extends OncePerRequestFilter {
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        ContentCachingRequestWrapper requestWrapper = new ContentCachingRequestWrapper(request);
+        ContentCachingResponseWrapper responseWrapper = new ContentCachingResponseWrapper(response);
+        filterChain.doFilter(requestWrapper, responseWrapper);
+//        logApi(request, response);
+        logBody(requestWrapper,responseWrapper);
+
+        responseWrapper.copyBodyToResponse();
+    }
+
+
+    private void logApi(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        int httpStatus = response.getStatus(); //200,403,404之類的
+        String httpMethod = request.getMethod();
+        String uri = request.getRequestURI();
+        String params = request.getQueryString();
+        if (params != null) {
+            uri += "?" + params;
+        }
+        System.out.println(String.join(" ", String.valueOf(httpStatus), httpMethod, uri));
+    }
+    private void logBody(ContentCachingRequestWrapper request, ContentCachingResponseWrapper response) {
+        String requestBody = getContent(request.getContentAsByteArray());
+        System.out.println("Request: " + requestBody);
+
+        String responseBody = getContent(response.getContentAsByteArray());
+        System.out.println("Response: " + responseBody);
+    }
+
+    /**
+     * @param content
+     * @return 返回JSON字串
+     */
+    private String getContent(byte [] content){
+        String body = new String(content);
+        return body.replaceAll("[\n\t]", ""); //去除換行\n與定位符號\t
+    }
+
+
+}
+```
 
 ## Interceptor
 
