@@ -30,13 +30,20 @@ flowchart LR;
 
 1((使用者))--發送請求
 -->Filter\n+統一設置編碼\n+過濾敏感字\n+登入驗證\n+URL級別的訪問權限控制\n+數據壓縮
--->interceptor\n+權限驗證\n+登入驗證\n+性能檢測
+-->dispatcher
+-->Interceptor\n+權限驗證\n+登入驗證\n+性能檢測
 -->AOP\n+日誌紀錄
 -->2(Controller)
--->service1 & service2  
+
 
 -1[粗糙]--能處理request的精細程度---->-2[細緻]
 ```
+
+
+
+![image-20220912164304013](https://i.imgur.com/vO1K7ew.png)
+
+
 
 
 
@@ -51,7 +58,7 @@ flowchart LR;
 
 ```
 
-在HttpServletRequest到達Servlet之前，過濾、處理一些資訊
+在HttpServletRequest到達Servlet之前，過濾、處理一些資訊，本身依賴Sevlet容器，不能獲取SpringBean的一些資訊
 
 #### 自定義Filter
 
@@ -161,7 +168,15 @@ SpringBoot本身也提供了許多不同的Filter供使用，參考如下
 
 
 
-其中以**OncePerRequestFilter**最常被使用，這個Filter會去**過濾每一個Request請求，且不會重複執行**，且這個Filter有一個doFilterInternal()的方法，供我們撰寫Filter邏輯(因doFilter()的方法已在OncePerRequestFilter裡面實現了)，可以用來做Jwtoken的登入驗證，程式如下：
+
+
+
+
+其中以**OncePerRequestFilter**最常被使用，這個Filter會去**過濾每一個Request請求，且不會重複執行**，且這個Filter有一個doFilterInternal()的方法，供我們撰寫Filter邏輯`因doFilter()的方法已在OncePerRequestFilter裡面實現了`，可以用來做Jwtoken的登入驗證，程式如下：
+
+
+
+
 
 ```java
 @Component
@@ -344,9 +359,42 @@ public class PrintResponseRequest extends OncePerRequestFilter {
 }
 ```
 
+
+
+
+
 ## Interceptor
 
-本身是AOP的一種應用
+本身是AOP的一種應用，其實攔截器跟過濾器是可以互相替換的，功能其實差不多，只是攔截器可以在請求到達Controller或是回應回傳出Contrller時進行攔截，攔截成功依樣可以時做一些自訂義的業務邏輯進行修改
+
+
+
+![image-20220912164539364](https://i.imgur.com/1qACg6a.png)
+
+
+
+```mermaid
+graph LR;
+request-->id1
+id1-->id2-->id4-->id3-->id6-->id5
+
+subgraph  攔截器1
+direction TB
+id1["preHandle()"] 
+id3["postHandler()"]
+id5["afterCompletion()"]
+ end
+subgraph  攔截器2
+direction TB
+id2["preHandle()"]
+id4["postHandler()"]
+id6["afterCompletion()"]
+ end
+```
+
+
+
+
 
 ### AOP
 
@@ -690,13 +738,15 @@ Handler -.->id2[Filter] & id3[Filter]
 
 
 
-參考
+# 參考
 
 
 
 https://www.cnblogs.com/itlihao/p/14329905.html
 
+https://blog.csdn.net/fly910905/article/details/86537648
 
+https://codertw.com/%E7%A8%8B%E5%BC%8F%E8%AA%9E%E8%A8%80/712557/
 
 
 
