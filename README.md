@@ -2,7 +2,10 @@
 
 
 
+# 目錄
 
++ [Filter(過濾器)Interceptor(攔截器)AOP(剖面導向程式設計)之差異](#Filter(過濾器)Interceptor(攔截器)AOP(剖面導向程式設計)之差異)
+  + [Filter ](#Filter )
 
 # AspectJ 
 
@@ -365,7 +368,7 @@ public class PrintResponseRequest extends OncePerRequestFilter {
 
 ## Interceptor
 
-本身是AOP的一種應用，其實攔截器跟過濾器是可以互相替換的，功能其實差不多，只是攔截器可以在請求到達Controller或是回應回傳出Contrller時進行攔截，攔截成功依樣可以時做一些自訂義的業務邏輯進行修改
+本身是AOP的一種應用，其實攔截器跟過濾器是可以互相替換的，功能其實差不多，只是**攔截器可以在請求到達Controller或是回應回傳出Contrller時進行攔截**，攔截成功時可以實做一些自定義的業務邏輯進行修改
 
 
 
