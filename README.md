@@ -35,11 +35,41 @@ flowchart LR;
 -->2(Controller)
 -->service1 & service2  
 
+-1[粗糙]--能處理request的精細程度---->-2[細緻]
 ```
 
 
 
-# Filter 
+## Filter 
+
+```mermaid
+
+flowchart LR;
+
+1[瀏覽器]--->2{過濾器}--->3[Web資源]
+3[Web資源]-->2{過濾器}-->1[瀏覽器]
+
+```
+
+在HttpServletRequest到達Servlet之前，過濾、處理一些資訊
+
+#### 自定義Filter
+
+
+
+
+
+
+
+## Interceptor
+
+本身是AOP的一種應用
+
+### AOP
+
+
+
+
 
 
 
