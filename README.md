@@ -26,7 +26,7 @@ AOP ---> SpringAop & AspectJ
 
 不修改原始碼，從而擴充新功能
 
-# Filter(過濾器)Interceptor(攔截器)AOP(剖面導向程式設計)之差異
+# Filter(過濾器)Interceptor(攔截器)AspectJ(AOP)之差異
 
 
 
@@ -52,7 +52,7 @@ flowchart LR;
 
 
 
-## Filter 
+## Filter
 
 ```mermaid
 
@@ -401,159 +401,150 @@ id6["afterCompletion()"]
 
 
 
-### AOP
 
 
 
 
+## AOP 底層原理
 
 
 
-
-
-
-
-
-
-# AOP 底層原理
-
-1. 動態代理(Spring5本身已經封裝了)
-
-   1. 有兩種情況的動態代理
-
-      1. 有介面(JDK動態代理)
-
-         
-
-         ```java
-         interface UserDao{
-             public void login();
-         }
-         ```
-
-         ```java
-         class UserDaoImpl implements　UserDao{
-             public void login(){  
-             }
-         }
-         ```
-
-         1. 創建UserDao介面實現類的代理對象，代理對象會有被代理對象的所有方法，並且增強
-
-         
-
-      2. 無介面(CGLIB動態代理)
-
-         ```java
-         class User{
-          public void add (){
-              
-          }   
-         }
-         ```
-
-         ```java
-         class Person extends User{
-             public void add(){
-                 super.add();
-             }
-         }
-         ```
-
-         1. CGLIB(Code Generation Library)動態代理
-            1. 創建當前類子類的代理對象
-
++ 動態代理(Spring5本身已經封裝了)
+  + 有兩種情況的動態代理
+    + 有介面(JDK動態代理)
+    
+      ```java
+      interface UserDao{
+          public void login();
+      }
+      ```
+    
+      ```java
+      class UserDaoImpl implements　UserDao{
+          public void login(){  
+          }
+      }
+      ```
+    
+      ​	創建UserDao介面實現類的代理對象，代理對象會有被代理對象的所有方法，並且增強
+    
       
+    
+       +    無介面(CGLIB動態代理)
+    
+            ```java
+            class User{
+             public void add (){
+                 
+             }   
+            }
+            ```
+    
+            ```java
+            class Person extends User{
+                public void add(){
+                    super.add();
+                }
+            }
+            ```
+    
+            
 
-      ## AOP(JDK動態代理)
 
-      1. 使用JDK的動態代理，要使用Proxy類裡面的方法來創建出代理對象 `newProxyInstance(類加載器,增強方法所在的類，這個類實現的介面,實現這個接口(InvocationHandler)`
 
-         ![](https://raw.githubusercontent.com/Hoxton019030/image/main/data/202209061536485.png)
+### AOP(JDK動態代理)
 
-      2. 編寫JDK動態代碼
+使用JDK的動態代理，要使用Proxy類裡面的方法來創建出代理對象 `newProxyInstance(類加載器,增強方法所在的類，這個類實現的介面,實現這個接口(InvocationHandler)`
 
-         
+![](https://raw.githubusercontent.com/Hoxton019030/image/main/data/202209061536485.png)
 
-         ```java
-         public interface UserDao {
-             public int add (int a,int b);
-         
-             public String update(String id);
-         }
-         
-         ```
 
-         ```java
-         public class UserDaoImpl implements UserDao{
-             @Override
-             public int add(int a, int b) {
-                 System.out.println("add方法執行了");
-                 return a+b;
-             }
-         
-             @Override
-             public String update(String id) {
-                 return id;
-             }
-         }
-         
-         ```
 
-         ```java
-         package com.example.aop;
-         
-         import java.lang.reflect.InvocationHandler;
-         import java.lang.reflect.Method;
-         import java.lang.reflect.Proxy;
-         import java.util.Arrays;
-         
-         /**
-          * @author Hoxton
-          * @version 1.1.0
-          */
-         public class JDKProxy {
-         
-             public static void main(String[] args) {
-                 Class[] interfaces = {UserDao.class};
-                 UserDaoImpl userDao = new UserDaoImpl();
-                 UserDao dao = (UserDao) Proxy.newProxyInstance(JDKProxy.class.getClassLoader(), interfaces, new UserDaoProxy(userDao));
-                 //此dao已經不是原本的dao，而是新的代理類dao了
-                 int result = dao.add(1, 2);
-                 System.out.println("result = " + result);
-             }
-         }
-         //創建代理對象的代碼
-         class UserDaoProxy implements InvocationHandler {
-         
-             //1. 把創建的是誰的代理對象，把誰傳遞進來
-             // 有參建構子
-             private Object obj;
-         
-             public UserDaoProxy(Object obj) {
-                 this.obj = obj;
-             }
-         
-         
-             //增強的邏輯
-             @Override
-             public Object invoke(Object proxy, Method method, Object[] methodArgs) throws Throwable {
-         
-                 //方法之前
-                 System.out.println("方法之前執行..." + method.getName() + "傳遞的參數..." + Arrays.toString(methodArgs));
-                 //被增強的方法執行
-                 Object res = method.invoke(obj, methodArgs);
-                 //方法之後
-                 System.out.println("方法之後執行..." + obj);
-         
-                 return res;
-             }
-         }
-         ```
 
-         
 
-# AOP專業術語
+編寫JDK動態代碼
+
+
+
+```java
+public interface UserDao {
+    public int add (int a,int b);
+
+    public String update(String id);
+}
+
+```
+
+```java
+public class UserDaoImpl implements UserDao{
+    @Override
+    public int add(int a, int b) {
+        System.out.println("add方法執行了");
+        return a+b;
+    }
+
+    @Override
+    public String update(String id) {
+        return id;
+    }
+}
+
+```
+
+```java
+package com.example.aop;
+
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.util.Arrays;
+
+/**
+ * @author Hoxton
+ * @version 1.1.0
+ */
+public class JDKProxy {
+
+    public static void main(String[] args) {
+        Class[] interfaces = {UserDao.class};
+        UserDaoImpl userDao = new UserDaoImpl();
+        UserDao dao = (UserDao) Proxy.newProxyInstance(JDKProxy.class.getClassLoader(), interfaces, new UserDaoProxy(userDao));
+        //此dao已經不是原本的dao，而是新的代理類dao了
+        int result = dao.add(1, 2);
+        System.out.println("result = " + result);
+    }
+}
+//創建代理對象的代碼
+class UserDaoProxy implements InvocationHandler {
+
+    //1. 把創建的是誰的代理對象，把誰傳遞進來
+    // 有參建構子
+    private Object obj;
+
+    public UserDaoProxy(Object obj) {
+        this.obj = obj;
+    }
+
+
+    //增強的邏輯
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] methodArgs) throws Throwable {
+
+        //方法之前
+        System.out.println("方法之前執行..." + method.getName() + "傳遞的參數..." + Arrays.toString(methodArgs));
+        //被增強的方法執行
+        Object res = method.invoke(obj, methodArgs);
+        //方法之後
+        System.out.println("方法之後執行..." + obj);
+
+        return res;
+    }
+}
+```
+
+
+
+### AOP專業術語
 
 1. 連接點
 
@@ -610,8 +601,7 @@ id6["afterCompletion()"]
 
 
 
-
-# AOP(準備)
+### AOP(準備)
 
 1. Spring 框架一般都是基於AspectJ實現的AOP操作
 
@@ -676,7 +666,7 @@ id6["afterCompletion()"]
    
    
 
-# AOP操作(Aspect J  註解)
+### AOP操作(Aspect J  註解)
 
 1. 創建類，在類裡面定義方法
 
@@ -730,22 +720,9 @@ flowchart TD;
 
 
 
-## JUL 入門
-
-```mermaid
-flowchart LR;
-Application-->Logger--->Handler--->id1[Outside World]
-Logger -.->Filter
-Handler -.->id2[Filter] & id3[Filter]
-```
-
-
-
 
 
 # 參考
-
-
 
 https://www.cnblogs.com/itlihao/p/14329905.html
 
@@ -841,7 +818,7 @@ https://codertw.com/%E7%A8%8B%E5%BC%8F%E8%AA%9E%E8%A8%80/712557/
 
 
 
-# 
+
 
 
 
