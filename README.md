@@ -55,9 +55,103 @@ flowchart LR;
 
 #### 自定義Filter
 
++ 以註解方式製作Filter
+
+```java
+/**
+* 網路上教學蠻多都是implenments filter，但我建議extend GenericFilterBean
+* 會比較方便一點，省去implenments init(), distory()的麻煩 
+*/
+
+@Slf4j
+@Component
+@WebFilter(filterName = "f1",urlPatterns = {"*.html","*.jsp","/"})  //filterName就只是一個名稱可以，隨意就好，urlPattern是用來指定哪些url要經過這個過濾器
+public class HiFilter extends GenericFilterBean {
+    
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+      log.info("Hello Hoxton");
+      chain.doFilter(request,response);
+    }
+}
+```
+
+![image-20220912151657403](https://i.imgur.com/R9tNv8y.png)
+
+結果如上
 
 
 
++ 以Java配置方式製作Filter
+
+```java
+@Slf4j
+/**
+* 網路上教學蠻多都是implenments filter，但我建議extend GenericFilterBean
+* 會比較方便一點，省去implenments init(), distory()的麻煩 
+*/
+
+public class HiFilter extends GenericFilterBean {
+
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+      log.info("Hello Hoxton");
+      chain.doFilter(request,response);
+    }
+}
+```
+
+```java
+@Configuration
+public class FilterConfig {
+    @Bean
+    public FilterRegistrationBean heFilterRegistration() {
+        FilterRegistrationBean registration = new FilterRegistrationBean(new HiFilter());
+        registration.addUrlPatterns("/*"); //配置相關的路徑
+        return registration;
+    }
+}
+```
+
+> 一些其他的config設置，僅供參考，與上面事例無關
+>
+> ```java
+> @Configuration
+> public class FilterConfig {
+>     //test
+>     @Bean
+>     public FilterRegistrationBean<Filter> logProcessTimeFilter() {
+>         FilterRegistrationBean<Filter> bean = new FilterRegistrationBean<>();
+>         bean.setFilter(new LogProcessTimeFilter()); //設定想要使用哪一個Filter
+>         bean.addUrlPatterns("/*"); //設置哪些url會觸發Filter，設置成/* 就代表全部都會吃到，/user/*就代表/user開頭的都會吃到
+>         bean.setName("logProcessTimeFilter"); //設置要叫什麼名字
+>         bean.setOrder(0); //設定過濾器的執行順序
+>         return bean;
+>     }
+> 
+>     @Bean
+>     public FilterRegistrationBean<Filter> logApiFilter() {
+>         FilterRegistrationBean<Filter> bean = new FilterRegistrationBean<>();
+>         bean.setFilter(new LogApiFilter()); //設定想要使用哪一個Filter
+>         bean.addUrlPatterns("/*"); //設置哪些url會觸發Filter，設置成/* 就代表全部都會吃到，/user/*就代表/user開頭的都會吃到
+>         bean.setName("logApiFilter"); //設置要叫什麼名字
+>         bean.setOrder(1); //設定過濾器的執行順序
+>         return bean;
+>     }
+>     @Bean
+>     public FilterRegistrationBean<Filter> printResponseRequestFilter() {
+>         FilterRegistrationBean<Filter> bean = new FilterRegistrationBean<>();
+>         bean.setFilter(new PrintResponseRequest()); //設定想要使用哪一個Filter
+>         bean.addUrlPatterns("/*"); //設置哪些url會觸發Filter，設置成/* 就代表全部都會吃到，/user/*就代表/user開頭的都會吃到
+>         bean.setName("printResponseRequestFilter"); //設置要叫什麼名字
+>         bean.setOrder(2); //設定過濾器的執行順序
+>         return bean;
+>     }
+> //////
+> }
+> ```
+>
+> 
 
 
 
@@ -407,7 +501,11 @@ Handler -.->id2[Filter] & id3[Filter]
 
 
 
+參考
 
+
+
+https://www.cnblogs.com/itlihao/p/14329905.html
 
 
 
