@@ -9,7 +9,7 @@
   + [Interceptor](#Interceptor)
   + AspectJ
 
-# AspectJ 
+# AspectJ
 
 
 
@@ -49,6 +49,8 @@ flowchart LR;
 
 
 ![image-20220912164304013](https://i.imgur.com/vO1K7ew.png)
+
+![image-20220913100841950](https://i.imgur.com/jQ4pF5v.png)
 
 
 
@@ -139,7 +141,7 @@ public class FilterConfig {
 
 
 
-> 一些其他的config設置，僅供參考，與上面勢利無關
+> 一些其他的config設置，僅供參考，與上面釋例無關
 >
 > ```java
 > @Configuration
@@ -184,6 +186,17 @@ public class FilterConfig {
 SpringBoot本身也提供了許多不同的Filter供使用，參考如下
 
 ![image-20220912153023872](https://i.imgur.com/nKZ6Hy1.png)
+
+
+
+常用的有以下幾個
+
++ CharacterEncodingFilter(用於處理編碼問題)
++ HiddenHttpMethodFilter(隱藏Http函數)
++ HttpPutFormContentFilter(form表單處理)
++ RequesrtContextFilter(請求上下文)
+
+其他資訊可以詳閱[Spring MVC中各个filter的用法](https://blog.csdn.net/qyp1314/article/details/42023725)
 
 
 
@@ -392,6 +405,14 @@ public class PrintResponseRequest extends OncePerRequestFilter {
 
 
 
+可以用來
+
++ 性能監控：紀錄請求的處理時間，比如說請求處理太久（超過500毫秒）
++ 登入檢測
++ 
+
+
+
 ![image-20220912164539364](https://i.imgur.com/1qACg6a.png)
 
 
@@ -417,6 +438,70 @@ id6["afterCompletion()"]
 
 
 
+要實現interceptor有兩種方式
+
+1. 實作HandlerInterceptor
+2. 繼承HandlerInterceptorAdapter
+
+
+
+釋例
+
++ 自定義攔截器
+
+```java
+public class LogInterceptor extends HandlerInterceptorAdapter {
+
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        long startTime = System.currentTimeMillis();
+        System.out.println("\n-------- LogInterception.preHandle --- ");
+        System.out.println("Request URL: " + request.getRequestURL());
+        System.out.println("Start Time: " + System.currentTimeMillis());
+
+        request.setAttribute("startTime", startTime);
+
+        return true;
+    }
+
+    @Override
+    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
+        System.out.println("\n-------- LogInterception.postHandle --- ");
+        System.out.println("Request URL: " + request.getRequestURL());
+    }
+
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
+        System.out.println("\n-------- LogInterception.afterCompletion --- ");
+
+        long startTime = (Long) request.getAttribute("startTime");
+        long endTime = System.currentTimeMillis();
+        System.out.println("Request URL: " + request.getRequestURL());
+        System.out.println("End Time: " + endTime);
+
+        System.out.println("Time Taken: " + (endTime - startTime));
+    }
+}
+```
+
+
+
++ 註冊攔截器
+
+```java
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(new LogInterceptor());
+
+        registry.addInterceptor(new OldLoginInterceptor()).addPathPatterns("/admin/oldLogin");
+
+        registry.addInterceptor(new AdminInterceptor()).addPathPatterns("/admin/*").excludePathPatterns("/admin/oldLogin");
+    }
+}
+```
 
 
 
@@ -424,10 +509,11 @@ id6["afterCompletion()"]
 
 
 
+## AspectJ
 
-## AOP 底層原理
 
 
+屬於一種AOP框架
 
 + 動態代理(Spring5本身已經封裝了)
   + 有兩種情況的動態代理
@@ -584,6 +670,8 @@ class UserDaoProxy implements InvocationHandler {
 2. 切入點
 
    實際被增強的方法，就叫切入點
+
+   
 
 3. 通知(增強)
 
@@ -748,11 +836,9 @@ https://www.cnblogs.com/itlihao/p/14329905.html
 
 https://blog.csdn.net/fly910905/article/details/86537648
 
-https://codertw.com/%E7%A8%8B%E5%BC%8F%E8%AA%9E%E8%A8%80/712557/
+[SpringBoot攔截器(Interceptor)詳解](https://codertw.com/%E7%A8%8B%E5%BC%8F%E8%AA%9E%E8%A8%80/712557/)
 
-
-
-
+[Spring Boot使用過濾器和攔截器分別實現REST介面簡易安全認證](https://www.zendei.com/article/52571.html)
 
 
 
