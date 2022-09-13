@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 
 
 
@@ -422,6 +423,10 @@ id6["afterCompletion()"]
 
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+想要在SpringBoot裡面自定義Interceptor的話必須要
+>>>>>>> Stashed changes
 =======
 想要在SpringBoot裡面自定義Interceptor的話必須要
 >>>>>>> Stashed changes
@@ -434,8 +439,11 @@ id6["afterCompletion()"]
 + preHandler：進入controller之前所要執行的行為，用來進行一些前置初始化的操作，或對當前請求進行預處理，也可以進行一些判斷來決定請求是否繼續下去。該方法返回的是Boolean，當它返回False時，表示請求結束，後續的interceptor和Controller不會再執行；當它返回True時，會繼續調用下一個Interceptor的preHandler方法，若沒有下一個Interceptor時則調用當前請求的Controller
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 ## AOP 底層原理
 =======
+=======
+>>>>>>> Stashed changes
   ```java
       @Override
       public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
@@ -443,12 +451,16 @@ id6["afterCompletion()"]
           return true;
       }
   ```
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
   
 
 + postHandler：方法在當前請求處理完成之後，也就是 Controller 方法調用之後執行
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 + 動態代理(Spring5本身已經封裝了)
   + 有兩種情況的動態代理
@@ -491,12 +503,17 @@ id6["afterCompletion()"]
     
             
 =======
+=======
+>>>>>>> Stashed changes
   ```java
       @Override
       public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws       Exception {
        ThreadContext.clearAll(); //清空所有的ThreadContext，讓每一筆的UUID都獨一無二
       }
   ```
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
   
@@ -507,6 +524,7 @@ id6["afterCompletion()"]
 
 使用JDK的動態代理，要使用Proxy類裡面的方法來創建出代理對象 `newProxyInstance(類加載器,增強方法所在的類，這個類實現的介面,實現這個接口(InvocationHandler)`
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 ![](https://raw.githubusercontent.com/Hoxton019030/image/main/data/202209061536485.png)
 
@@ -622,10 +640,51 @@ class UserDaoProxy implements InvocationHandler {
       
 
  創建UserDao介面實現類的代理對象，代理對象會有被代理對象的所有方法，並且增強
+=======
+## AOP
+
+#### AOP 底層原理
+
++ 動態代理(Spring5本身已經封裝了)
+  + 有兩種情況的動態代理
+    + 有介面(JDK動態代理)
+    
+      ```java
+      interface UserDao{
+      	public void login();
+      }
+      ```
+    
+      ```java
+      class UserDaoImpl implements UserDao{
+          public void login(){  
+          }
+      }
+      ```
+    
+      
+
+ 創建UserDao介面實現類的代理對象，代理對象會有被代理對象的所有方法，並且增強
 
 
 
 
+
+
+
+
+
+
+
+1. CGLIB(Code Generation Library)動態代理
+   1. 創建當前類子類的代理對象
+
+>>>>>>> Stashed changes
+
+
+
+
+<<<<<<< Updated upstream
 
 
 
@@ -644,6 +703,12 @@ class UserDaoProxy implements InvocationHandler {
 
 
 
+=======
+#### AOP(JDK動態代理)
+
+
+
+>>>>>>> Stashed changes
 使用JDK的動態代理，要使用Proxy類裡面的方法來創建出代理對象 `newProxyInstance(類加載器,增強方法所在的類，這個類實現的介面,實現這個接口(InvocationHandler)`
     
          ![](https://raw.githubusercontent.com/Hoxton019030/image/main/data/202209061536485.png)
@@ -734,6 +799,9 @@ class UserDaoProxy implements InvocationHandler {
 ​         
 
 #### AOP專業術語
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
 1. 連接點
@@ -796,6 +864,9 @@ class UserDaoProxy implements InvocationHandler {
 =======
 
 #### AOP(準備)
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
 1. Spring 框架一般都是基於AspectJ實現的AOP操作
@@ -862,7 +933,11 @@ class UserDaoProxy implements InvocationHandler {
    
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 ### AOP操作(Aspect J  註解)
+=======
+#### AOP操作(Aspect J  註解)
+>>>>>>> Stashed changes
 =======
 #### AOP操作(Aspect J  註解)
 >>>>>>> Stashed changes
@@ -1053,4 +1128,6 @@ https://codertw.com/%E7%A8%8B%E5%BC%8F%E8%AA%9E%E8%A8%80/712557/
 
 
 
+=======
+>>>>>>> Stashed changes
 >>>>>>> 
