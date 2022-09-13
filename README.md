@@ -1,4 +1,3 @@
-<<<<<<< Updated upstream
 
 
 
@@ -45,6 +44,8 @@ flowchart LR;
 -1[粗糙]--能處理request的精細程度---->-2[細緻]
 ```
 
+![image-20220913095403747](https://i.imgur.com/6rnsYg4.png)
+
 
 
 ![image-20220912164304013](https://i.imgur.com/vO1K7ew.png)
@@ -64,17 +65,15 @@ flowchart LR;
 
 ```
 
-在HttpServletRequest到達Servlet之前，過濾、處理一些資訊，本身依賴Sevlet容器，不能獲取SpringBean的一些資訊
-
-可以用來
-
-+ 統一設置編碼
-+ 過濾敏感字
-+ 登入驗證
-+ URL級別的訪問權限控制
-+ 數據壓縮
+在HttpServletRequest到達Servlet之前，過濾、處理一些資訊，本身依賴Sevlet容器，不能獲取SpringBean的一些資訊，它是`javax.servlet.FilterChain`的項目，**不是Springboot**
 
 
+
+可以做什麼
+
++ 修改Request, Response
++ 防止xss(Cross-Site-SCripting跨網站指令碼)攻擊
++ 包裝二進制流
 
 #### 自定義Filter
 
@@ -94,7 +93,7 @@ public class HiFilter extends GenericFilterBean {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
       log.info("Hello Hoxton");
-      chain.doFilter(request,response);
+      chain.doFilter(request,response); //代表這個Filter已經作用完畢，可以把request,response交給下一個Filter了
     }
 }
 ```
@@ -119,7 +118,7 @@ public class HiFilter extends GenericFilterBean {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
       log.info("Hello Hoxton");
-      chain.doFilter(request,response);
+      chain.doFilter(request,response);  //代表這個Filter已經作用完畢，可以把request,response交給下一個Filter了
     }
 }
 ```
@@ -136,40 +135,44 @@ public class FilterConfig {
 }
 ```
 
-> 一些其他的config設置，僅供參考，與上面事例無關
+
+
+
+
+> 一些其他的config設置，僅供參考，與上面勢利無關
 >
 > ```java
 > @Configuration
 > public class FilterConfig {
->     //test
->     @Bean
->     public FilterRegistrationBean<Filter> logProcessTimeFilter() {
->         FilterRegistrationBean<Filter> bean = new FilterRegistrationBean<>();
->         bean.setFilter(new LogProcessTimeFilter()); //設定想要使用哪一個Filter
->         bean.addUrlPatterns("/*"); //設置哪些url會觸發Filter，設置成/* 就代表全部都會吃到，/user/*就代表/user開頭的都會吃到
->         bean.setName("logProcessTimeFilter"); //設置要叫什麼名字
->         bean.setOrder(0); //設定過濾器的執行順序
->         return bean;
->     }
+>  //test
+>  @Bean
+>  public FilterRegistrationBean<Filter> logProcessTimeFilter() {
+>      FilterRegistrationBean<Filter> bean = new FilterRegistrationBean<>();
+>      bean.setFilter(new LogProcessTimeFilter()); //設定想要使用哪一個Filter
+>      bean.addUrlPatterns("/*"); //設置哪些url會觸發Filter，設置成/* 就代表全部都會吃到，/user/*就代表/user開頭的都會吃到
+>      bean.setName("logProcessTimeFilter"); //設置要叫什麼名字
+>      bean.setOrder(0); //設定過濾器的執行順序
+>      return bean;
+>  }
 > 
->     @Bean
->     public FilterRegistrationBean<Filter> logApiFilter() {
->         FilterRegistrationBean<Filter> bean = new FilterRegistrationBean<>();
->         bean.setFilter(new LogApiFilter()); //設定想要使用哪一個Filter
->         bean.addUrlPatterns("/*"); //設置哪些url會觸發Filter，設置成/* 就代表全部都會吃到，/user/*就代表/user開頭的都會吃到
->         bean.setName("logApiFilter"); //設置要叫什麼名字
->         bean.setOrder(1); //設定過濾器的執行順序
->         return bean;
->     }
->     @Bean
->     public FilterRegistrationBean<Filter> printResponseRequestFilter() {
->         FilterRegistrationBean<Filter> bean = new FilterRegistrationBean<>();
->         bean.setFilter(new PrintResponseRequest()); //設定想要使用哪一個Filter
->         bean.addUrlPatterns("/*"); //設置哪些url會觸發Filter，設置成/* 就代表全部都會吃到，/user/*就代表/user開頭的都會吃到
->         bean.setName("printResponseRequestFilter"); //設置要叫什麼名字
->         bean.setOrder(2); //設定過濾器的執行順序
->         return bean;
->     }
+>  @Bean
+>  public FilterRegistrationBean<Filter> logApiFilter() {
+>      FilterRegistrationBean<Filter> bean = new FilterRegistrationBean<>();
+>      bean.setFilter(new LogApiFilter()); //設定想要使用哪一個Filter
+>      bean.addUrlPatterns("/*"); //設置哪些url會觸發Filter，設置成/* 就代表全部都會吃到，/user/*就代表/user開頭的都會吃到
+>      bean.setName("logApiFilter"); //設置要叫什麼名字
+>      bean.setOrder(1); //設定過濾器的執行順序
+>      return bean;
+>  }
+>  @Bean
+>  public FilterRegistrationBean<Filter> printResponseRequestFilter() {
+>      FilterRegistrationBean<Filter> bean = new FilterRegistrationBean<>();
+>      bean.setFilter(new PrintResponseRequest()); //設定想要使用哪一個Filter
+>      bean.addUrlPatterns("/*"); //設置哪些url會觸發Filter，設置成/* 就代表全部都會吃到，/user/*就代表/user開頭的都會吃到
+>      bean.setName("printResponseRequestFilter"); //設置要叫什麼名字
+>      bean.setOrder(2); //設定過濾器的執行順序
+>      return bean;
+>  }
 > 
 > }
 > ```
@@ -379,19 +382,13 @@ public class PrintResponseRequest extends OncePerRequestFilter {
 
 
 
+
+
 ## Interceptor
 
-本身是AOP的一種應用，其實攔截器跟過濾器是可以互相替換的，功能其實差不多，但攔截器是由Spring管理的，因此注入@bean很方便，且**攔截器可以在請求到達Controller或是回應回傳出Contrller時進行攔截**，攔截成功時可以實做一些自定義的業務邏輯進行修改，但不能去修改response的結果。
 
 
-
-可以用來
-
-+ 日誌紀錄(進行訊息統計，比如統計文章瀏覽數)
-+ 權限檢查
-+ 性能監控
-+ 通用行為
-+ 異常處理
+本身是AOP的一種應用，其實攔截器跟過濾器是可以互相替換的，功能其實差不多，只是**攔截器可以在請求到達Controller或是回應回傳出Contrller時進行攔截**，攔截成功時可以實做一些自定義的業務邏輯進行修改，且Interceptor是Springboot下的一個功能`org.springframework.web.servlet.HandlerInterceptor`
 
 
 
@@ -422,46 +419,16 @@ id6["afterCompletion()"]
 
 
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
-想要在SpringBoot裡面自定義Interceptor的話必須要
->>>>>>> Stashed changes
-=======
-想要在SpringBoot裡面自定義Interceptor的話必須要
->>>>>>> Stashed changes
 
-+ 實現HandlerInterceptor
-+ 繼承HandlerInterceptorAdapter
 
-並Overwrite以下三種方法
 
-+ preHandler：進入controller之前所要執行的行為，用來進行一些前置初始化的操作，或對當前請求進行預處理，也可以進行一些判斷來決定請求是否繼續下去。該方法返回的是Boolean，當它返回False時，表示請求結束，後續的interceptor和Controller不會再執行；當它返回True時，會繼續調用下一個Interceptor的preHandler方法，若沒有下一個Interceptor時則調用當前請求的Controller
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
+
+
 ## AOP 底層原理
-=======
-=======
->>>>>>> Stashed changes
-  ```java
-      @Override
-      public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-          ThreadContext.put("requestid", UUID.randomUUID().toString()); //ThreadContext 創建一個key-value組，供Log4j.xml使用，在這裡是產生一組UUID，讓log紀錄裡面的每一筆log都有獨特的UUID以供追蹤
-          return true;
-      }
-  ```
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 
-  
 
-+ postHandler：方法在當前請求處理完成之後，也就是 Controller 方法調用之後執行
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 + 動態代理(Spring5本身已經封裝了)
   + 有兩種情況的動態代理
     + 有介面(JDK動態代理)
@@ -479,11 +446,11 @@ id6["afterCompletion()"]
       }
       ```
     
-      ​	創建UserDao介面實現類的代理對象，代理對象會有被代理對象的所有方法，並且增強
+      創建UserDao介面實現類的代理對象，代理對象會有被代理對象的所有方法，並且增強
     
       
     
-       +    無介面(CGLIB動態代理)
+     +    無介面(CGLIB動態代理)
     
             ```java
             class User{
@@ -502,30 +469,13 @@ id6["afterCompletion()"]
             ```
     
             
-=======
-=======
->>>>>>> Stashed changes
-  ```java
-      @Override
-      public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws       Exception {
-       ThreadContext.clearAll(); //清空所有的ThreadContext，讓每一筆的UUID都獨一無二
-      }
-  ```
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 
-  
 
-+ afterCompletion：在所有的interceptor都被調用後執行，通常用於資源的清理
 
 ### AOP(JDK動態代理)
 
 使用JDK的動態代理，要使用Proxy類裡面的方法來創建出代理對象 `newProxyInstance(類加載器,增強方法所在的類，這個類實現的介面,實現這個接口(InvocationHandler)`
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 ![](https://raw.githubusercontent.com/Hoxton019030/image/main/data/202209061536485.png)
 
 
@@ -615,194 +565,6 @@ class UserDaoProxy implements InvocationHandler {
 
 
 ### AOP專業術語
-=======
-## AOP
-
-#### AOP 底層原理
-
-+ 動態代理(Spring5本身已經封裝了)
-  + 有兩種情況的動態代理
-    + 有介面(JDK動態代理)
-    
-      ```java
-      interface UserDao{
-      	public void login();
-      }
-      ```
-    
-      ```java
-      class UserDaoImpl implements UserDao{
-          public void login(){  
-          }
-      }
-      ```
-    
-      
-
- 創建UserDao介面實現類的代理對象，代理對象會有被代理對象的所有方法，並且增強
-=======
-## AOP
-
-#### AOP 底層原理
-
-+ 動態代理(Spring5本身已經封裝了)
-  + 有兩種情況的動態代理
-    + 有介面(JDK動態代理)
-    
-      ```java
-      interface UserDao{
-      	public void login();
-      }
-      ```
-    
-      ```java
-      class UserDaoImpl implements UserDao{
-          public void login(){  
-          }
-      }
-      ```
-    
-      
-
- 創建UserDao介面實現類的代理對象，代理對象會有被代理對象的所有方法，並且增強
-
-
-
-
-
-
-
-
-
-
-
-1. CGLIB(Code Generation Library)動態代理
-   1. 創建當前類子類的代理對象
-
->>>>>>> Stashed changes
-
-
-
-
-<<<<<<< Updated upstream
-
-
-
-
-
-
-
-1. CGLIB(Code Generation Library)動態代理
-   1. 創建當前類子類的代理對象
-
-
-
-
-
-#### AOP(JDK動態代理)
-
-
-
-=======
-#### AOP(JDK動態代理)
-
-
-
->>>>>>> Stashed changes
-使用JDK的動態代理，要使用Proxy類裡面的方法來創建出代理對象 `newProxyInstance(類加載器,增強方法所在的類，這個類實現的介面,實現這個接口(InvocationHandler)`
-    
-         ![](https://raw.githubusercontent.com/Hoxton019030/image/main/data/202209061536485.png)
-    
-      2. 編寫JDK動態代碼
-
-
-​         
-​      
-​         ```java
-​         public interface UserDao {
-​             public int add (int a,int b);
-​         
-​             public String update(String id);
-​         }
-​         
-​         ```
-​      
-​         ```java
-​         public class UserDaoImpl implements UserDao{
-​             @Override
-​             public int add(int a, int b) {
-​                 System.out.println("add方法執行了");
-​                 return a+b;
-​             }
-​         
-​             @Override
-​             public String update(String id) {
-​                 return id;
-​             }
-​         }
-​         
-​         ```
-​      
-         ```java
-         package com.example.aop;
-         
-         import java.lang.reflect.InvocationHandler;
-         import java.lang.reflect.Method;
-         import java.lang.reflect.Proxy;
-         import java.util.Arrays;
-         
-         /**
-          * @author Hoxton
-          * @version 1.1.0
-          */
-         public class JDKProxy {
-         
-             public static void main(String[] args) {
-                 Class[] interfaces = {UserDao.class};
-                 UserDaoImpl userDao = new UserDaoImpl();
-                 UserDao dao = (UserDao) Proxy.newProxyInstance(JDKProxy.class.getClassLoader(), interfaces, new UserDaoProxy(userDao));
-                 //此dao已經不是原本的dao，而是新的代理類dao了
-                 int result = dao.add(1, 2);
-                 System.out.println("result = " + result);
-             }
-         }
-         //創建代理對象的代碼
-         class UserDaoProxy implements InvocationHandler {
-         
-             //1. 把創建的是誰的代理對象，把誰傳遞進來
-             // 有參建構子
-             private Object obj;
-         
-             public UserDaoProxy(Object obj) {
-                 this.obj = obj;
-             }
-
-
-​         
-​             //增強的邏輯
-​             @Override
-​             public Object invoke(Object proxy, Method method, Object[] methodArgs) throws Throwable {
-​         
-​                 //方法之前
-​                 System.out.println("方法之前執行..." + method.getName() + "傳遞的參數..." + Arrays.toString(methodArgs));
-​                 //被增強的方法執行
-​                 Object res = method.invoke(obj, methodArgs);
-​                 //方法之後
-​                 System.out.println("方法之後執行..." + obj);
-​         
-​                 return res;
-​             }
-​         }
-​         ```
-
-
-​         
-
-#### AOP專業術語
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 
 1. 連接點
 
@@ -859,15 +621,7 @@ class UserDaoProxy implements InvocationHandler {
 
 
 
-<<<<<<< Updated upstream
 ### AOP(準備)
-=======
-
-#### AOP(準備)
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 
 1. Spring 框架一般都是基於AspectJ實現的AOP操作
 
@@ -932,15 +686,7 @@ class UserDaoProxy implements InvocationHandler {
    
    
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 ### AOP操作(Aspect J  註解)
-=======
-#### AOP操作(Aspect J  註解)
->>>>>>> Stashed changes
-=======
-#### AOP操作(Aspect J  註解)
->>>>>>> Stashed changes
 
 1. 創建類，在類裡面定義方法
 
@@ -973,7 +719,7 @@ public class User {
 
 
 
-#### Log4j 2
+# Log4j 2
 
 ```mermaid
 flowchart TD;
@@ -1128,6 +874,4 @@ https://codertw.com/%E7%A8%8B%E5%BC%8F%E8%AA%9E%E8%A8%80/712557/
 
 
 
-=======
->>>>>>> Stashed changes
 >>>>>>> 
